@@ -6,14 +6,10 @@
 // Parker Lowney and Natalie Norris
 
 // Number progression:
-// 1-9 (< 10)
+// 0-9 (< 10)
 // a-z (< 37)
 // A-Z (< 63)
-// |aa| - |zz| (< 89)
-// |AA| - |ZZ| (< 115)
-// |aaa| - |zzz|
-// |AAA| - |ZZZ|
-// ...
+// [number] (<= 89)
 
 
 // Pow rewritten for integers (not particularly necessary)
@@ -41,15 +37,21 @@ int largestpower(int basey, int numby) {
 // Prints out numbers as a single digit, corresponding to above chart
 void printdigit(int numb) {
 
+    char str[20];
+    sprintf(str, "%d", numb);
+
     // Basic table for common values (single char digits)
-    if (numb < 10) {
+    if (numb < 10) {                    // Print numbers through 9
         printf("%c", ('0' + numb));
         
-    } else if (numb < 37) {
-        printf("%c", ('W' + numb));  // W is 87, so ex 10+87 = 97 which is ascii for a, 10=a
+    } else if (numb < 37) {             // Print lowercase letters through 37
+        printf("%c", ('W' + numb));     // W is 87, so ex 10+87 = 97 which is ascii for a, 10=a
 
-    } else if (numb < 63) {
+    } else if (numb < 63) {             // Print capital letters through 63
         printf("%c", (char) (numb + 28));
+
+    } else {                            // If it's above 89, print number in brackets
+        printf("[%s]", str);
     }
 }
 
