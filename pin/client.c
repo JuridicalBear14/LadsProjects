@@ -27,7 +27,7 @@ int main() {
     // Connect to port 5555
     int r = zsock_connect(requester, "tcp://10.111.172.24:5555");
 
-    printf("%d", r);
+    //printf("%d", r);
 
     char* str;
     char* response;
@@ -35,35 +35,19 @@ int main() {
     while (true) {
         // Get user message or response or both
         str = readline();
-        response = zstr_recv(requester);
 
         // If there's a response, print it
-        if (response != NULL) {
-            printf("%s", response);
+        if (!strcmp(str, "exit")) {
+            printf("exiting\n");
+            zstr_send(requester, "Exit");
+            break;
         }
 
         zstr_send(requester, str);
 
-        if (!strcmp(str, "exit")) {
-            printf("Exiting...\n");
-            //zstr_send(requester, "Exit");
-            zstr_free(&response);
-            break;
-        }
-
-        zstr_free(&response);
+        //zstr_free(&response);
         free(str);
     }
-    // Send string
-    zstr_send(requester, "Exit");
-
-    // Wait for response
-    sleep(1);
-
-    // Recieve string
-    response = zstr_recv(requester);
-
-    printf("%s\n", response);
 
     zsock_destroy(&requester);
 }
