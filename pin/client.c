@@ -25,29 +25,30 @@ int main() {
     zsock_t* requester = zsock_new(ZMQ_REQ);
 
     // Connect to port 5555
-    int r = zsock_connect(requester, "tcp://10.111.172.24:5555");
-
-    //printf("%d", r);
+    zsock_connect(requester, "tcp://10.111.172.24:5555");
+    //zsock_connect(requester, "tcp://localhost:5555");
 
     char* str;
-    char* response;
+    char* rep;
 
     while (true) {
         // Get user message or response or both
         str = readline();
+        if ((rep = zstr_recv(requester)) != NULL){
+            // If there's a response, print it
+            printf("%s", rep);
+        }
 
-        // If there's a response, print it
         if (!strcmp(str, "exit")) {
             printf("exiting\n");
-            zstr_send(requester, "Exit");
+            //zstr_send(requester, "Exit");
             break;
         }
 
         zstr_send(requester, str);
 
-        //zstr_free(&response);
+        zstr_free(&rep);
         free(str);
     }
-
     zsock_destroy(&requester);
 }
