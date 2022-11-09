@@ -26,6 +26,8 @@ int main() {
             zstr_send(responder, "World");
         }
 
+        sleep(1);
+
         // Free message
         zstr_free(&msg);
     }
