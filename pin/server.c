@@ -19,14 +19,12 @@ int main() {
         // Recieve message
         char* msg = zstr_recv(responder);
 
-        if (!strcmp(msg, "Hello")) {
+        if (1) {
             printf("%s", msg);
 
             // Send back message
-            zstr_send(responder, "World");
+            zstr_send(responder, "Recieved");
         }
-
-        sleep(1);
 
         // Free message
         zstr_free(&msg);
