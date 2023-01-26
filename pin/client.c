@@ -5,7 +5,7 @@
 
 char* str;
 
-void* readin(void* str) {
+void* readin() {
     char buff[100];
 
     while (fgets(buff, 100, stdin) != NULL) {
@@ -29,7 +29,7 @@ int main() {
 
     while (true) {
         zstr_send(requester, str);
-        //str = NULL;
+        str = NULL;
 
         rep = zstr_recv(requester);
         //printf("%s\n", rep);
