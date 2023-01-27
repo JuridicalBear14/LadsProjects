@@ -18,12 +18,19 @@ int main() {
 
         // Recieve message
         char* msg = zstr_recv(responder);
-
-        if (1) {
+    
+        if (strcmp(msg, "quit\n")) {
             printf("%s", msg);
-
+    
             // Send back message
             zstr_send(responder, "Recieved");
+        } else {
+            // Quit server
+            printf("Stopping server\n");
+            zstr_send(responder, "quitting");
+
+            zstr_free(&msg);
+            break;
         }
 
         // Free message

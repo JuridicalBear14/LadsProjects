@@ -3,7 +3,7 @@
 #include <sys/select.h>
 #include <pthread.h>
 
-char* str;
+char* str = "";
 
 void* readin() {
     char buff[100];
@@ -29,14 +29,21 @@ int main() {
 
     while (true) {
         zstr_send(requester, str);
-        str = NULL;
+
+        if (!strcmp(str, "quit\n")) {
+            printf("Stopping client\n");
+            zstr_free(&rep);
+            break;
+        }
+
+        str = "";
 
         rep = zstr_recv(requester);
-        //printf("%s\n", rep);
 
         zstr_free(&rep);
     }
 
+    pthread_cancel(pid);
     pthread_join(pid, NULL);
     zsock_destroy(&requester);
 }
