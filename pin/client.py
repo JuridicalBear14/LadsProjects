@@ -1,37 +1,33 @@
 import zmq
 import asyncio
 
-message = ""
-
-async def get_input():
-    while True:
-        return input()
-
+# Initialize server
 context = zmq.Context()
-
 print("Connecting to server")
 socket = context.socket(zmq.REQ)
 socket.connect("tcp://localhost:5555")
 
-# Send message
-socket.send_string("Connected Client")
+# Setup user
+user = "[PARK]"
 
-# Recieve
-message = socket.recv().decode("UTF-8")
-print(message)
+message = "Connect"
 
-async def main():
+def main():
     global message
 
     # Event loop - CLIENT SENDS FIRST
     while True:
-        socket.send_string(message)
-        message = await get_input()
+        socket.send_string(user + "::" + message)
+        message = input()
 
-        rep = socket.recv().decode("UTF-8")
-        if rep != "":
+        rep = socket.recv().decode("ascii")
+        if message != "quit":
             print(rep)
+
+        else:
+            socket.send_string("quit\n")
+            break
 
 
 if __name__ ==  '__main__':
-    asyncio.run(main())
+    main()
