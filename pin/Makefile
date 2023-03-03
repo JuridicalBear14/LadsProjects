@@ -1,7 +1,10 @@
 client: client.c
 	gcc -o client client.c -lczmq -lpthread
 
-server: server.c
+server: p_server.c
+	gcc -o server p_server.c -lczmq
+
+demo: server.c
 	gcc -o server server.c -lczmq
 
 pin:
