@@ -1,6 +1,7 @@
 #include <czmq.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 // Default assignment port
 #define defport 5500
@@ -12,6 +13,9 @@ typedef struct {
     int port;
     char* outbound;   // Outgoing message for given user
 } user_t;
+
+// Master thread shutoff control
+bool shutoff = false;
 
 /* Look up and return the port number for a given user id */
 int lookup(zsock_t** connections, char* id) {
@@ -61,6 +65,13 @@ void control_loop() {
     while (true) {
         char* msg = zstr_recv(assignment);
 
+        // Check for shutoff
+        if (shutoff) {
+            zstr_send(assignment, "Server-shutoff");
+            zstr_free(&msg);
+            break;
+        }
+
         // Recieved port assignment request
         if (!strcmp(msg + 8, "PA-REQ")) {
             // Assign a port and send back assignment
@@ -90,6 +101,10 @@ int main() {
     // Start control loop
     pthread_t pid;
     pthread_create(&pid, NULL, control_loop, NULL);
-    sleep(3);
+
+    shutoff = true;
+
+    // Give threads some time to cleanup before exit
+    //pthread_join(pid, NULL);
     exit(0);
 }
