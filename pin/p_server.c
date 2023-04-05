@@ -41,7 +41,7 @@ int port_assign(zsock_t** connections, char* msg) {
 
 /* Main event loop, effectively main function, but seperated
     to allow command line I/O to be parent thread */
-void control_loop() {
+static void* control_loop() {
     printf("Starting server...\n");
 
     // Init assignment socket
@@ -49,9 +49,9 @@ void control_loop() {
 
     char* port = (char*) malloc(sizeof(char) * 20);
     sprintf(port, "tcp://*:%d", defport);
-
+    printf("Connecting to port: %s\n", port);
     // Bind to default port
-    int r = zsock_bind(assignment, port);
+    int r = zsock_bind(assignment, "tcp://*:5500");
     free(port);  // No longer needed
 
     if (r != defport) {
@@ -66,9 +66,10 @@ void control_loop() {
         char* msg = zstr_recv(assignment);
 
         // Check for shutoff
-        if (shutoff) {
+        if (!strcmp(msg, "quit\n")) {
             zstr_send(assignment, "Server-shutoff");
             zstr_free(&msg);
+            printf("Shutoff\n");
             break;
         }
 
@@ -95,16 +96,30 @@ void control_loop() {
     zsock_destroy(&assignment);
 }
 
+// Creates a socket to send exit signal to control loop
+void cancel_ctrl_loop() {
+    zsock_t* cancel = zsock_new(ZMQ_REQ);
+
+    zsock_connect(cancel, "tcp://localhost:5500");
+
+    zstr_send(cancel, "quit\n");
+    printf("Sent\n");
+    zsock_destroy(&cancel);
+}
+
 int main() {
     printf("Initializing server\n");
 
     // Start control loop
     pthread_t pid;
-    pthread_create(&pid, NULL, control_loop, NULL);
+    pthread_create(&pid, NULL, &control_loop, NULL);
+
+    sleep(5);
 
     shutoff = true;
+    cancel_ctrl_loop();
 
     // Give threads some time to cleanup before exit
-    //pthread_join(pid, NULL);
+    pthread_join(pid, NULL);
     exit(0);
 }

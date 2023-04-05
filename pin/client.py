@@ -5,7 +5,7 @@ import asyncio
 context = zmq.Context()
 print("Connecting to server")
 socket = context.socket(zmq.REQ)
-socket.connect("tcp://localhost:5555")
+socket.connect("tcp://localhost:5500")
 
 # Setup user
 user = "[PARK]"

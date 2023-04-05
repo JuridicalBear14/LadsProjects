@@ -9,4 +9,4 @@ demo: server.c
 
 pin:
 	gcc -o client client.c -lczmq -lpthread
-	gcc -o server server.c -lczmq
+	gcc -o server p_server.c -lczmq
