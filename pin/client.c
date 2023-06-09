@@ -40,7 +40,7 @@ int main() {
 
         rep = zstr_recv(requester);
 
-        zstr_free(&rep);
+        zstr_free(&rep); 
     }
 
     pthread_cancel(pid);
