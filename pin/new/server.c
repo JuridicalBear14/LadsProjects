@@ -4,10 +4,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <sys/un.h>
-#include <linux/in.h>
 
 #define PORT 5555
 
@@ -18,7 +14,8 @@ void error(void) {
 
 int main(void) {
     int fd, new;
-    struct socketaddr addr;
+    struct sockaddr_in addr;
+    int len = sizeof(addr);
 
     
     if(fd = socket(AF_LOCAL, SOCK_STREAM, 0) < 0) {error();}
@@ -27,11 +24,11 @@ int main(void) {
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(PORT);
 
-    if (bind(fd, &addr, sizeof(addr)) < 0) {error();}
+    if (bind(fd, (struct sockaddr*) &addr, sizeof(addr)) < 0) {error();}
 
     listen(fd, 3);
 
-    if (new = accept(fd, &addr, sizeof(addr)) < 0) {error();}
+    if (new = accept(fd, (struct sockaddr*) &addr, (socklen_t*) &len) < 0) {error();}
 
     // Now ready to go
 
