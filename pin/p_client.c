@@ -10,11 +10,11 @@
 #define PORT 5555
 
 int main(int argc, char** argv) {
-    char* port = "127.0.0.1";
+    char* ip = "127.0.0.1";
 
-    // Port given
+    // ip given
     if (argc > 1) {
-        port = argv[1];
+        ip = argv[1];
     }
 
     int status, valread, client_fd;
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
     // Convert IPv4 and IPv6 addresses from text to binary
     // form
-    if (inet_pton(AF_INET, port, &serv_addr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, ip, &serv_addr.sin_addr) <= 0) {
         printf("\nInvalid address/ Address not supported \n");
         return -1;
     }
