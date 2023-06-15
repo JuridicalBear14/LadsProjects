@@ -40,12 +40,10 @@ int main(void) {
         exit(EXIT_FAILURE);
     }
 
-    while ((valread = read(new_socket, buffer, 1024)) != 0) {
-        fprintf(stderr, "%s", buffer);
-        memset(buffer, 0,  strlen(buffer));
-    }
-
-    //send(new_socket, hello, strlen(hello), 0);
+    valread = read(new_socket, buffer, 1024);
+    printf("%s\n", buffer);
+    send(new_socket, hello, strlen(hello), 0);
+    printf("Hello message sent\n");
   
     // closing the connected socket
     close(new_socket);

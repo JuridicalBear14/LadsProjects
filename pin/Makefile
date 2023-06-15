@@ -1,12 +1,14 @@
-client: client.c
-	gcc -o client client.c -lczmq -lpthread
+both: p_client p_server
+
+client: p_client.c
+	gcc -o client p_client.c -lpthread
 
 server: p_server.c
-	gcc -o server p_server.c -lczmq
-
-demo: server.c
-	gcc -o server server.c -lczmq
+	gcc -o server p_server.c
 
 pin:
-	gcc -o client client.c -lczmq -lpthread
-	gcc -o server p_server.c -lczmq
+	gcc -o client client.c -lpthread
+	gcc -o server p_server.c
+
+clean:
+	rm p_server p_client
