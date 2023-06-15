@@ -6,8 +6,28 @@
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include "defn.h"
 
-#define PORT 5555
+int client_fd;
+
+void* send_m(void* argv) {
+    char buf[1024];
+
+    while (fgets(buf, sizeof(buf), stdin) != NULL) {
+        send(client_fd, buf, sizeof(buf), 0);
+        memset(buf, 0, sizeof(buf));
+    }
+}
+
+void* recieve(void* argv) {
+    char buf[1024];
+
+    while (read(client_fd, buf, 1024) != 0) {
+        fprintf(stderr, "Recieved -> %s", buf);
+        memset(buf, 0, sizeof(buf));
+    }
+}
 
 int main(int argc, char** argv) {
     char* ip = "127.0.0.1";
@@ -17,7 +37,7 @@ int main(int argc, char** argv) {
         ip = argv[1];
     }
 
-    int status, valread, client_fd;
+    int status, valread;
     struct sockaddr_in serv_addr;
     char* hello = "Hello from client";
     char buffer[1024] = { 0 };
@@ -42,12 +62,15 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    while (fgets(buffer, 1024, stdin) != NULL) {
-        send(client_fd, buffer, strlen(buffer), 0);
-        memset(buffer, 0,  strlen(buffer));
-    }
+    pthread_t listener;
+    pthread_t sender;
 
-    //send(client_fd, hello, strlen(hello), 0);
+    pthread_create(&listener, NULL, recieve, NULL);
+    pthread_create(&sender, NULL, send_m, NULL);
+
+    // Cleanup threads
+    pthread_join(listener, NULL);
+    pthread_join(sender, NULL);
 
     // closing the connected socket
     close(client_fd);
