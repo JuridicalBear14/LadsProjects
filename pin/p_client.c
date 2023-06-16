@@ -24,7 +24,7 @@ void* recieve(void* argv) {
     char buf[1024];
 
     while (read(client_fd, buf, 1024) != 0) {
-        fprintf(stderr, "Recieved -> %s", buf);
+        fprintf(stdout, "Recieved -> %s", buf);
         memset(buf, 0, sizeof(buf));
     }
 }
@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
 
     int status, valread;
     struct sockaddr_in serv_addr;
-    char* hello = "Hello from client";
     char buffer[1024] = { 0 };
+
     if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
         return -1;
