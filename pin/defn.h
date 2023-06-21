@@ -1,5 +1,5 @@
 #define PORT 5555
-#define MAXUSR 2
+#define MAXUSR 10
 
 // Struct to hold user information
 typedef struct user_info {
