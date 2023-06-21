@@ -14,44 +14,48 @@ char* name;
 int namelen;
 
 void* send_m(void* argv) {
-    char buf[1024];
-    // Copy name into buf
-    int offset = 6;   // Offset for decorator characters
-    namelen += offset;
-    snprintf(buf, namelen, "[%s] -> ", name);
+    char buf[MAXMSG];
 
     while (fgets(buf, sizeof(buf), stdin) != NULL) {
+        // Remove newline
+        buf[strlen(buf) - 1] = 0;
+
         send(client_fd, buf, sizeof(buf), 0);
         memset(buf, 0, sizeof(buf));
     }
 }
 
 void* recieve(void* argv) {
-    char buf[1024];
+    char buf[MAXMSG];
 
-    while (read(client_fd, buf, 1024) != 0) {
-        fprintf(stdout, "Recieved -> %s", buf);
+    while (read(client_fd, buf, MAXMSG) != 0) {
+        fprintf(stdout, "%s\n", buf);
         memset(buf, 0, sizeof(buf));
     }
 }
 
 // Init function run on connection
 void init() {
-
+    // Send name over
+    send(client_fd, name, NAMELEN, 0);
 }
 
 int main(int argc, char** argv) {
     char* ip = "127.0.0.1";
-    name = "TEST";
+    name = "NULL";
+
+    // Name given
+    if (argc > 1) {
+        name = argv[1];
+    }
 
     // ip given
-    if (argc > 1) {
-        ip = argv[1];
+    if (argc > 2) {
+        ip = argv[2];
     }
 
     int status, valread;
     struct sockaddr_in serv_addr;
-    char buffer[1024] = { 0 };
 
     if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");

@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -14,6 +15,7 @@
 
 // Array of fds to monitor
 struct pollfd pollfds[MAXUSR];
+char* names[MAXUSR];
 
 // Find next open port index
 int nextindex() {
@@ -29,23 +31,31 @@ int nextindex() {
 
 // Send message to all used ports other than given
 void sendall(int ix, char* buf) {
+    int offset = 6;   // Offset for "[$] -> " characters in name
+    char msg[MAXMSG + NAMELEN + offset];
+
+    // Write data into final message
+    snprintf(msg, MAXMSG + NAMELEN + offset, "[%s] -> %s", names[ix], buf);
+
     for (int i = 0; i < MAXUSR; i++) {
         if (pollfds[i].fd != 0 && i != ix) {
             // Send to socket
-            write(pollfds[i].fd, buf, strlen(buf));
+            write(pollfds[i].fd, msg, strlen(msg));
         }
     }
 }
 
 // Initialization function called on every new connection
 void init(int ix) {
-
+    // Read name
+    names[ix] = malloc(sizeof(char) * NAMELEN);   // 15 char limit
+    read(pollfds[ix].fd, names[ix], NAMELEN);
 }
 
 // Monitor and relay socket messages
 void* relay(void* argv) {
     int n;
-    char buf[1024];
+    char buf[MAXMSG];
 
     // Wait for event
     while ((n = poll(pollfds, MAXUSR, 5)) != -1) {
@@ -64,7 +74,7 @@ void* relay(void* argv) {
                     continue;
                 }
 
-                fprintf(stderr, "Message recieved from slot: %d\n", i);
+                fprintf(stderr, "Message recieved from user: %s\n", names[i]);
 
                 // Send message to all others
                 sendall(i, buf);
@@ -83,7 +93,6 @@ int main(void) {
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = { 0 };
 
     fprintf(stderr, "Starting server...\n");
 
@@ -123,6 +132,13 @@ int main(void) {
     pthread_t r_thread;
     pthread_create(&r_thread, NULL, relay, NULL);
 
+    // Playing with printing IP
+    /*
+    fprintf(stderr, "Server running, accepting connections:\n");
+    fprintf(stderr, "IP address is: %s\n", inet_ntoa(address.sin_addr));
+    fprintf(stderr, "port is: %d\n", (int) ntohs(address.sin_port));
+    */
+
     // Wait and accept incoming connections
     int index;
     while (1) {
@@ -139,8 +155,8 @@ int main(void) {
             exit(EXIT_FAILURE);
         }
 
-        fprintf(stderr, "Connection accepted in slot %d, fd: %d\n", index, pollfds[index].fd);
         init(index);
+        fprintf(stderr, "Connection accepted in slot %d, fd: %d\n", index, pollfds[index].fd);
     }
 
     // closing the listening socket
