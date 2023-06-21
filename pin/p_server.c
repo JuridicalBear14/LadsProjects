@@ -37,6 +37,11 @@ void sendall(int ix, char* buf) {
     }
 }
 
+// Initialization function called on every new connection
+void init(int ix) {
+
+}
+
 // Monitor and relay socket messages
 void* relay(void* argv) {
     int n;
@@ -135,6 +140,7 @@ int main(void) {
         }
 
         fprintf(stderr, "Connection accepted in slot %d, fd: %d\n", index, pollfds[index].fd);
+        init(index);
     }
 
     // closing the listening socket

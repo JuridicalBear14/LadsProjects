@@ -10,9 +10,15 @@
 #include "defn.h"
 
 int client_fd;
+char* name;
+int namelen;
 
 void* send_m(void* argv) {
     char buf[1024];
+    // Copy name into buf
+    int offset = 6;   // Offset for decorator characters
+    namelen += offset;
+    snprintf(buf, namelen, "[%s] -> ", name);
 
     while (fgets(buf, sizeof(buf), stdin) != NULL) {
         send(client_fd, buf, sizeof(buf), 0);
@@ -29,8 +35,14 @@ void* recieve(void* argv) {
     }
 }
 
+// Init function run on connection
+void init() {
+
+}
+
 int main(int argc, char** argv) {
     char* ip = "127.0.0.1";
+    name = "TEST";
 
     // ip given
     if (argc > 1) {
@@ -61,6 +73,8 @@ int main(int argc, char** argv) {
         printf("\nConnection Failed \n");
         return -1;
     }
+
+    init();
 
     pthread_t listener;
     pthread_t sender;
