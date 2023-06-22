@@ -4,11 +4,11 @@ client: p_client.c
 	gcc -o client p_client.c -lpthread
 
 server: p_server.c
-	gcc -o server p_server.c
+	gcc -o server p_server.c -lpthread
 
 pin:
 	gcc -o client client.c -lpthread
-	gcc -o server p_server.c
+	gcc -o server p_server.c -lpthread
 
 clean:
 	rm server client
