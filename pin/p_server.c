@@ -20,7 +20,7 @@ char* names[MAXUSR];
 // Find next open port index
 int nextindex() {
     for (int i = 0; i < MAXUSR; i++) {
-        if (pollfds[i].fd == 0) {
+        if (pollfds[i].fd == -1) {
             return i;
         }
     }
@@ -38,7 +38,7 @@ void sendall(int ix, char* buf) {
     snprintf(msg, MAXMSG + NAMELEN + offset, "[%s] -> %s", names[ix], buf);
 
     for (int i = 0; i < MAXUSR; i++) {
-        if (pollfds[i].fd != 0 && i != ix) {
+        if (pollfds[i].fd != -1 && i != ix) {
             // Send to socket
             write(pollfds[i].fd, msg, strlen(msg));
         }
@@ -58,7 +58,7 @@ void* relay(void* argv) {
     char buf[MAXMSG];
 
     // Wait for event
-    while ((n = poll(pollfds, MAXUSR, 5)) != -1) {
+    while ((n = poll(pollfds, MAXUSR, 1000)) != -1) {
 
         // Figure out which fd(s) updated
         for (int i = 0; i < MAXUSR; i++) {
@@ -68,7 +68,7 @@ void* relay(void* argv) {
                 if (!read(pollfds[i].fd, buf, sizeof(buf))) {
                     // Closed
                     close(pollfds[i].fd);
-                    pollfds[i].fd = 0;
+                    pollfds[i].fd = -1;
 
                     fprintf(stderr, "Closed slot: %d\n", i);
                     continue;
@@ -126,6 +126,7 @@ int main(void) {
     // Set up pollfds
     for (int i = 0; i < MAXUSR; i++) {
         pollfds[i].events = POLLIN;
+        pollfds[i].fd = -1;
     }
 
     // Set up relay thread
