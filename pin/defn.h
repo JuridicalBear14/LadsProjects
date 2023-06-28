@@ -3,6 +3,9 @@
 #define NAMELEN 15     // Max name length
 #define MAXMSG 1024    // Max message length
 
+// UI stuff
+#define TYPEBOX_HEIGHT 3
+
 // Struct to hold user information
 typedef struct user_info {
     int socket;

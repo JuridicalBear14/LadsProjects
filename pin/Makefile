@@ -1,12 +1,12 @@
 both: client server
 
-client: p_client.c interface.c
+client: p_client.c interface.c defn.h
 	gcc -o client p_client.c interface.c -lpthread -lncurses
 
-server: p_server.c
+server: p_server.c defn.h
 	gcc -o server p_server.c -lpthread
 
-interface: interface.c
+interface: interface.c defn.h
 	gcc -o interface interface.c -lncurses
 
 pin:
