@@ -31,16 +31,10 @@ int nextindex() {
 
 // Send message to all used ports other than given
 void sendall(int ix, char* buf) {
-    int offset = 6;   // Offset for "[$] -> " characters in name
-    char msg[MAXMSG + NAMELEN + offset];
-
-    // Write data into final message
-    snprintf(msg, MAXMSG + NAMELEN + offset, "[%s] -> %s", names[ix], buf);
-
     for (int i = 0; i < MAXUSR; i++) {
         if (pollfds[i].fd != -1 && i != ix) {
             // Send to socket
-            write(pollfds[i].fd, msg, strlen(msg));
+            write(pollfds[i].fd, buf, strlen(buf));
         }
     }
 }

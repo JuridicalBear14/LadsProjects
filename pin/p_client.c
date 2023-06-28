@@ -13,23 +13,19 @@ int client_fd;
 char* name;
 int namelen;
 
-void* send_m(void* argv) {
-    char buf[MAXMSG];
+void send_message(char* buf, int size) {
+    char msg[size + namelen + 3];
 
-    while (fgets(buf, sizeof(buf), stdin) != NULL) {
-        // Remove newline
-        buf[strlen(buf) - 1] = 0;
-
-        send(client_fd, buf, sizeof(buf), 0);
-        memset(buf, 0, sizeof(buf));
-    }
+    snprintf(msg, size + namelen + 3, "<%s> %s", name, buf);
+    send(client_fd, msg, size + namelen + 3, 0);
 }
 
 void* recieve(void* argv) {
     char buf[MAXMSG];
 
     while (read(client_fd, buf, MAXMSG) != 0) {
-        fprintf(stdout, "%s\n", buf);
+        add_remote(buf, strlen(buf));
+        write_messages();
         memset(buf, 0, sizeof(buf));
     }
 }
@@ -48,6 +44,8 @@ int main(int argc, char** argv) {
     if (argc > 1) {
         name = argv[1];
     }
+
+    namelen = strlen(name);
 
     // ip given
     if (argc > 2) {
@@ -81,14 +79,14 @@ int main(int argc, char** argv) {
     init();
 
     pthread_t listener;
-    pthread_t sender;
+    pthread_t interface;
 
     pthread_create(&listener, NULL, recieve, NULL);
-    pthread_create(&sender, NULL, send_m, NULL);
+    pthread_create(&interface, NULL, start_interface, NULL);
 
     // Cleanup threads
     pthread_join(listener, NULL);
-    pthread_join(sender, NULL);
+    pthread_join(interface, NULL);
 
     // closing the connected socket
     close(client_fd);

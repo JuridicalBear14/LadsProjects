@@ -2,9 +2,20 @@
 #define MAXUSR 10
 #define NAMELEN 15     // Max name length
 #define MAXMSG 1024    // Max message length
+#define MSGGAP 0   // Gap between messages
 
 // UI stuff
-#define TYPEBOX_HEIGHT 3
+#define TYPEBOX_HEIGHT 1
+
+// Extern user name
+extern char* name;
+extern int namelen;
+
+// Shared funcs
+void* start_interface(void* argv);
+void write_messages();
+void add_remote(char* buf, int len);
+void send_message(char* buf, int size);
 
 // Struct to hold user information
 typedef struct user_info {
