@@ -1,6 +1,6 @@
 #define PORT 5555
 #define MAXUSR 10
-#define NAMELEN 15     // Max name length
+#define NAMELEN 5     // Max name length
 #define MAXMSG 1024    // Max message length
 #define MSGGAP 0   // Gap between messages
 
@@ -10,6 +10,7 @@
 // Extern user name
 extern char* name;
 extern int namelen;
+extern pthread_mutex_t mutex;
 
 // Shared funcs
 void* start_interface(void* argv);

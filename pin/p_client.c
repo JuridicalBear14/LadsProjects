@@ -24,8 +24,12 @@ void* recieve(void* argv) {
     char buf[MAXMSG];
 
     while (read(client_fd, buf, MAXMSG) != 0) {
+        pthread_mutex_lock(&mutex);
+
         add_remote(buf, strlen(buf));
         write_messages();
+
+        pthread_mutex_unlock(&mutex);
         memset(buf, 0, sizeof(buf));
     }
 }
@@ -43,6 +47,9 @@ int main(int argc, char** argv) {
     // Name given
     if (argc > 1) {
         name = argv[1];
+        if (strlen(name) > 5) {  // Clip off name
+            name[5] = 0;
+        }
     }
 
     namelen = strlen(name);
@@ -85,7 +92,7 @@ int main(int argc, char** argv) {
     pthread_create(&interface, NULL, start_interface, NULL);
 
     // Cleanup threads
-    pthread_join(listener, NULL);
+    pthread_detach(listener);    // Detach this guy, since we only want to wait on local
     pthread_join(interface, NULL);
 
     // closing the connected socket

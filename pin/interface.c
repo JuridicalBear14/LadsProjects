@@ -4,13 +4,22 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <pthread.h>
+#include <signal.h>
 #include "defn.h"
 
 // Colors
 
-// Globals
+// Screen control mutex
+pthread_mutex_t mutex;
+
+// Windows
 WINDOW* message_box;
 WINDOW* typebox;
+
+// Borders
+WINDOW* message_box_border;
+WINDOW* typebox_border;
 
 // Psuedo-constant window sizes
 int TLINES = TYPEBOX_HEIGHT + 2;
@@ -19,8 +28,12 @@ int MESSAGE_BOX_HEIGHT;
 int MESSAGE_BOX_WIDTH;
 
 int MSG_MAX = 1000;   // Initial max for message count, doubles when space runs out
+
+// Global vars
 char** messages;
 int msgix = 0;
+int x = 0;   // Cusor positions
+int y = 0;
 
 // Functions
 void event_loop();
@@ -42,7 +55,7 @@ void write_messages() {
         line -= 1 + MSGGAP;   // Allows for configurable text gap
     }
 
-    wmove(typebox, 0, 0);
+    wmove(typebox, y, x);
     keypad(typebox, TRUE);
     wrefresh(message_box);
     wrefresh(typebox);
@@ -101,6 +114,12 @@ WINDOW* create_border(int height, int width, int x, int y) {
     return temp;
 }
 
+// Redraws entire screen on SIGWINCH
+void redraw_screen() {
+
+}
+
+
 // Initial setup
 void* start_interface(void* argv) {
     // Set up gui stuff
@@ -110,16 +129,19 @@ void* start_interface(void* argv) {
     keypad(stdscr, TRUE);
     start_color();
 
+    // Set up mutex
+    pthread_mutex_init(&mutex, NULL);
+
     // Set up message array
     messages = (char**) calloc(MSG_MAX, sizeof(char*));
 
     // Set up color pairs
 
     // Draw main border
-    WINDOW* message_box_border = create_border(LINES - TLINES, COLS, 0, 0);
+    message_box_border = create_border(LINES - TLINES, COLS, 0, 0);
 
     // Draw typebar border
-    WINDOW* typebox_border = create_border(TLINES, COLS, 0, LINES - TLINES);
+    typebox_border = create_border(TLINES, COLS, 0, LINES - TLINES);
 
     // Setup window sizes
     TYPEBOX_WIDTH = COLS - 4;   // -4 -> 2 border 2 padding
@@ -154,8 +176,6 @@ void event_loop() {
     int XSTART = 0;
 
     int ch;    // int for expanded char set
-    int x = 0;
-    int y = 0;
 
     // Buffer to hold current message being typed
     char buffer[MAXMSG];
@@ -164,7 +184,7 @@ void event_loop() {
     // Move to start of box
     wmove(typebox, y, x);
     wrefresh(typebox);
-
+    redraw_screen();
     // Run until F1 quit key
     while ((ch = wgetch(typebox)) != KEY_F(1)) {
         if (isprint(ch) && (addix < MAXMSG)) {  // If regular key, just write
@@ -211,8 +231,12 @@ void event_loop() {
                     // If not empty, add
                     if (strlen(buffer) > 0) {
                         buffer[++addix] = 0;
+
+                        pthread_mutex_lock(&mutex);
                         add_message(buffer, addix + 1);
                         write_messages();
+                        pthread_mutex_unlock(&mutex);
+
                         send_message(buffer, addix + 1);
 
                         clear_window(typebox, TYPEBOX_HEIGHT);
@@ -221,6 +245,18 @@ void event_loop() {
 
                         y = 0; x = 0;
                     }
+                    break;
+                case KEY_RESIZE:   // Screen resize
+                    getmaxyx(stdscr, LINES, COLS);
+                    wresize(message_box_border, MESSAGE_BOX_HEIGHT, MESSAGE_BOX_WIDTH);
+                    wborder(message_box_border, '|', '|', '-', '-', '+', '+', '+', '+');
+                    //message_box_border = create_border(LINES - TLINES, COLS, 0, 0);
+                    //typebox_border = create_border(TLINES, COLS, 0, LINES - TLINES);
+
+                    //redraw_screen();
+                    wrefresh(message_box);
+                    //wrefresh(typebox);
+                    break;
             }
         }
 

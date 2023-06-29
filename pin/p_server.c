@@ -42,7 +42,7 @@ void sendall(int ix, char* buf) {
 // Initialization function called on every new connection
 void init(int ix) {
     // Read name
-    names[ix] = malloc(sizeof(char) * NAMELEN);   // 15 char limit
+    names[ix] = malloc(sizeof(char) * NAMELEN);   // name char limit
     read(pollfds[ix].fd, names[ix], NAMELEN);
 }
 
