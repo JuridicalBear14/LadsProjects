@@ -31,13 +31,16 @@ int MSG_MAX = 1000;   // Initial max for message count, doubles when space runs 
 
 // Global vars
 char** messages;
-int msgix = 0;
+int msgix = 0;   // Current index in message array
 int x = 0;   // Cusor positions
 int y = 0;
+int display_offset = 0;   // Offset for which messages are displayed
+                          // (ex: 1 -> display all messages except most recent)
 
 // Functions
 void event_loop();
 void clear_window(WINDOW* win, int height);
+void create_screen();
 
 // Write message array to screen
 void write_messages() {
@@ -47,7 +50,7 @@ void write_messages() {
     clear_window(message_box, MESSAGE_BOX_HEIGHT);
 
     int line_height;
-    for (int i = msgix - 1; i >= 0; i--) {
+    for (int i = msgix - 1 - display_offset; i >= 0; i--) {
         // Get line height for wrapping pruposes
         line_height = (strlen(messages[i])) / MESSAGE_BOX_WIDTH;
 
@@ -114,14 +117,33 @@ WINDOW* create_border(int height, int width, int x, int y) {
     return temp;
 }
 
-// Redraws entire screen on SIGWINCH
+// Redraws entire screen
 void redraw_screen() {
+    // Clear existing window
+    endwin();
+    refresh();
 
+    // Reset globals
+    x = 0;
+    y = 0;
+    display_offset = 0;
+    //msgix = 0;  // Not this one since message array remains
+
+    // Start new interface
+    create_screen();
 }
-
 
 // Initial setup
 void* start_interface(void* argv) {
+    // Set up message array
+    messages = (char**) calloc(MSG_MAX, sizeof(char*));
+
+    // Create window
+    create_screen();
+}
+
+// Creates a new screen without modifying any underlying data
+void create_screen() {
     // Set up gui stuff
     initscr();
     cbreak();
@@ -131,9 +153,6 @@ void* start_interface(void* argv) {
 
     // Set up mutex
     pthread_mutex_init(&mutex, NULL);
-
-    // Set up message array
-    messages = (char**) calloc(MSG_MAX, sizeof(char*));
 
     // Set up color pairs
 
@@ -162,6 +181,9 @@ void* start_interface(void* argv) {
     // Refresh everything
     wrefresh(typebox);
 
+    // Draw any messages
+    write_messages();
+
     // Start event loop
     event_loop(border, typebox);
 
@@ -184,7 +206,7 @@ void event_loop() {
     // Move to start of box
     wmove(typebox, y, x);
     wrefresh(typebox);
-    redraw_screen();
+
     // Run until F1 quit key
     while ((ch = wgetch(typebox)) != KEY_F(1)) {
         if (isprint(ch) && (addix < MAXMSG)) {  // If regular key, just write
@@ -207,13 +229,6 @@ void event_loop() {
             // Specific special case keys
 
             switch(ch) {
-                case KEY_UP:  // Change later to scroll messages
-                    // >1 to account for border at top
-                    y -= (y > 1);   // Equals a bool to decide whether move 1 or 0
-                    break;
-                case KEY_DOWN:  // Change later to scroll messages
-                    y += (y < TLINES - 1);
-                    break;
                 case KEY_BACKSPACE:
                     if (!(x == 0 && y == 0)) {   // If not first char
                         if (x == 0 && y != 0) {  // If end of line
@@ -227,6 +242,25 @@ void event_loop() {
                         buffer[addix--] = 0;
                     }
                     break;
+
+                // Arrow keys
+                case KEY_UP:
+                    display_offset++;
+
+                    pthread_mutex_lock(&mutex);
+                    write_messages();
+                    pthread_mutex_unlock(&mutex);
+
+                    break;
+                case KEY_DOWN:
+                    display_offset == 0 ? : display_offset--;
+
+                    pthread_mutex_lock(&mutex);
+                    write_messages();
+                    pthread_mutex_unlock(&mutex);
+
+                    break;
+
                 case '\n':   // Enter
                     // If not empty, add
                     if (strlen(buffer) > 0) {
@@ -246,17 +280,13 @@ void event_loop() {
                         y = 0; x = 0;
                     }
                     break;
-                case KEY_RESIZE:   // Screen resize
-                    getmaxyx(stdscr, LINES, COLS);
-                    wresize(message_box_border, MESSAGE_BOX_HEIGHT, MESSAGE_BOX_WIDTH);
-                    wborder(message_box_border, '|', '|', '-', '-', '+', '+', '+', '+');
-                    //message_box_border = create_border(LINES - TLINES, COLS, 0, 0);
-                    //typebox_border = create_border(TLINES, COLS, 0, LINES - TLINES);
 
-                    //redraw_screen();
-                    wrefresh(message_box);
-                    //wrefresh(typebox);
-                    break;
+                case KEY_F(2):   // Screen refresh
+                    redraw_screen();
+                    return;
+                case KEY_RESIZE:   // Screen resize
+                    redraw_screen();
+                    return;
             }
         }
 

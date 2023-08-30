@@ -5,7 +5,7 @@
 #define MSGGAP 0   // Gap between messages
 
 // UI stuff
-#define TYPEBOX_HEIGHT 1
+#define TYPEBOX_HEIGHT 2
 
 // Extern user name
 extern char* name;
