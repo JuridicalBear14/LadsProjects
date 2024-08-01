@@ -25,6 +25,7 @@ monkey_names = [
     "Spike Factory",
     "Engineer",
     "Beast Handler",
+    "Mermonkey",
     "Banana Farm"
 ]
 
